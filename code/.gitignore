@@ -1,0 +1,7 @@
+x64/*
+cnnproject.sln
+Debug/*
+cnnproject/Debug/*
+cnnproject/x64/*
+cnnproject/cnnproject*
+.vs/**
