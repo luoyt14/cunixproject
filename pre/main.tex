@@ -1,0 +1,68 @@
+%\documentclass[a4paper]{article}
+\documentclass[10pt]{beamer}
+
+\usepackage{graphicx}
+\usepackage{float} 
+\usepackage{subfigure}
+\setbeamertemplate{caption}[numbered]
+\usepackage{multirow}
+\usepackage{indentfirst}
+
+\makeatletter
+\renewcommand \theequation {%
+	\ifnum \c@section>\z@ \@arabic\c@section.\fi \ifnum \c@subsection>\z@
+	\@arabic\c@subsection.\fi\ifnum \c@subsubsection>\z@
+	\@arabic\c@subsubsection.\fi\@arabic\c@equation}
+\@addtoreset{equation}{section}
+\@addtoreset{equation}{subsection}
+\makeatother
+\setcounter{section}{-1}
+
+\renewcommand\thefigure{\thesection.\arabic{figure}}
+\makeatletter
+\@addtoreset{figure}{section}
+\makeatother
+
+\allowdisplaybreaks
+
+%\usepackage[dvipsnames,table,xcdraw]{xcolor}
+%\usepackage{beamerarticle}
+\usetheme{Berlin}
+%\usetheme{Boadilla}
+%\usetheme{Hannover}
+\useoutertheme[height=1.5cm]{sidebar}
+\usecolortheme{spruce}
+\usecolortheme{lily}
+\usefonttheme{professionalfonts}
+
+%\usepackage{ctex}
+\usepackage{xeCJK}
+\usepackage{caption}
+\setCJKmainfont{KaiTi}
+\setmainfont{Times New Roman}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+%\floatname{algorithm}{算法}
+\renewcommand{\algorithmicrequire}{\textbf{输入:}}  
+\renewcommand{\algorithmicensure}{\textbf{输出:}} 
+\setlength{\parindent}{2em}
+\title{Yet Another Unix Shell }
+\author{\href{mailto:luoyt14thu@gmail.com}{罗雁天}}
+\date{\today}
+\logo{\includegraphics[height=1.5cm]{Tsinghua2.png}}
+%\hyperlinkdocumentend{\logo{\includegraphics[height=1.5cm]{Tsinghua2.png}}}
+
+\begin{document}
+\begin{frame}{C/Unix程序设计大作业}
+\titlepage
+\end{frame}
+
+\section*{目录}
+\begin{frame}{目录}
+\tableofcontents
+\end{frame}
+
+
+\end{document}
