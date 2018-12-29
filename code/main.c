@@ -301,43 +301,21 @@ int main() {
 	while (1) {
 		cmdNum = 0;
 		varNum = 0;
-		printf("^_^ ");
+		printf("$ ");
 		fflush(stdin);
 		int n = getInput();
-		printf("%d\n", n);
 		if (n <= 0)
 			continue;
 		int i=0;
 		parseCmds(n);
+
+		if (parseArgs() < 0)
+			continue;
 		
 		for (i=0;i<cmdNum;++i) {
 			struct cmd *pcmd = cmdinfo + i;
-			
-			if (!pcmd->args[0])
-				continue;
-
-			// 基本命令
-			// if (strcmp(pcmd->args[0], "cd") == 0) {
-			// 	if (pcmd->args[1])
-			// 		chdir(pcmd->args[1]);
-			// 	continue;
-			// }
-			// if (strcmp(pcmd->args[0], "pwd") == 0) {
-			// 	char wd[4096];
-			// 	puts(getcwd(wd, 4096));
-			// 	continue;
-			// }
-			// if (strcmp(pcmd->args[0], "exit") == 0) {
-			// 	return 0;
-			// }
-
-			// // 较高级命令
-			// pid_t pid = fork();
-			// if (pid == 0) {
-			// 	execvp(pcmd->args[0], args);
-			// 	return 255;
-			// }
-			// wait(NULL);
+			struct cmd *tmp;
+			int status = execInner(pcmd);
 		}
 		
 	}
