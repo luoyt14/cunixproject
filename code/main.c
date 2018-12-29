@@ -297,6 +297,62 @@ int execInner(struct cmd* pcmd) {
 	return 1;
 }
 
+void setIO(struct cmd *pcmd, int rfd, int wfd) {
+	if (pcmd->rredir > 0) {
+		int flag;
+		if (pcmd->rredir == 1){
+			flag = O_WRONLY|O_TRUNC|O_CREAT;
+		} else {
+			flag = O_WRONLY|O_APPEND|O_CREAT;
+		}
+		int wport = open(pcmd->toFile, flag);
+		dup2(wport, STDOUT_FILENO);
+		close(wport);
+	}
+
+	if (pcmd->lredir > 0) {
+		int rport = open(pcmd->fromFile, O_RDONLY);
+		dup2(rport, STDIN_FILENO);
+		close(rport);
+	}
+
+	if (rfd!=STDIN_FILENO) {
+		dup2(rfd, STDIN_FILENO);
+		close(rfd);
+	}
+
+	if(wfd!=STDOUT_FILENO) {
+		dup2(wfd, STDOUT_FILENO);
+		close(wfd);
+	}
+}
+
+int execOuter(struct cmd *pcmd) {
+	if(!pcmd->next) {
+		setIO(pcmd, STDIN_FILENO, STDOUT_FILENO);
+		execvp(pcmd->args[0], pcmd->args);
+	}
+
+	int fd[2];
+	pipe(fd);
+	pid_t pid = fork();
+	if (pid < 0) {
+		printf("[ERROR]: fork error!\n");
+	} else if (pid == 0) {
+		close(fd[0]);
+		setIO(pcmd, STDIN_FILENO, fd[1]);
+		execvp(pcmd->args[0], pcmd->args);
+	} else {
+		wait(NULL);
+		pcmd = pcmd->next;
+		close(fd[1]);
+		setIO(pcmd, fd[0], STDOUT_FILENO);
+		execOuter(pcmd);
+	}
+
+	return 0;
+}
+
 int main() {
 	while (1) {
 		cmdNum = 0;
@@ -316,6 +372,25 @@ int main() {
 			struct cmd *pcmd = cmdinfo + i;
 			struct cmd *tmp;
 			int status = execInner(pcmd);
+			if (status == 1) {
+				pid_t pid = fork();
+				if (pid == 0) {
+					execOuter(pcmd);
+				} else if (pid < 0) {
+					printf("[ERROR]: fork error!\n");
+				}
+
+				if (!pcmd->bgExec)
+					wait(NULL);
+
+				pcmd = pcmd->next;
+
+				while(pcmd) {
+					tmp = pcmd->next;
+					free(pcmd);
+					pcmd = tmp;
+				}
+			}
 		}
 		
 	}

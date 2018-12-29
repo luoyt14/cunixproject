@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 
 #define MAX_CMD_LENGTH 255
 #define MAX_PATH_LENGTH 255
