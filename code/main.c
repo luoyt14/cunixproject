@@ -14,7 +14,45 @@ struct cmd cmdinfo[MAX_CMD_NUM];
 char cmdStr[MAX_CMD_LENGTH];
 int cmdNum, varNum;
 
-int parseCmds(int n) {
+void init(struct cmd *pcmd) {
+	pcmd->bgExec = 0;
+	pcmd->argc = 0;
+	pcmd->lredir = 0;
+	pcmd->rredir = 0;
+	pcmd->next = NULL;
+	pcmd->begin = -1;
+	pcmd->end = -1;
+	for(int i=0;i<MAX_ARG_NUM;++i)
+		pcmd->args[i] = NULL;
+}
+
+int getInput() {
+	int pCmdStr = 0;
+	int cur;
+	char newline = 1;
+	while(newline) {
+		cur = MAX_CMD_LENGTH - pCmdStr;
+		if (cur <= 0) {
+			printf("[ERROR]: The cmd is too long to exec!\n");
+			return -1;
+		}
+		fgets(cmdStr+pCmdStr, cur, stdin);
+		newline = 0;
+		while(1) {
+			if (cmdStr[pCmdStr] == '\\' && cmdStr[pCmdStr+1] == '\n') {
+				newline = 1;
+				cmdStr[pCmdStr++] = '\0';
+				break;
+			} else if (cmdStr[pCmdStr] == '\n') {
+				break;
+			}
+			++pCmdStr;
+		}
+	}
+	return pCmdStr;
+}
+
+void parseCmds(int n) {
 	char beginCmd = 0;
 	struct cmd* head;
 
@@ -54,9 +92,11 @@ int main() {
 		varNum = 0;
 		printf("^_^ ");
 		fflush(stdin);
-		fgets(cmdStr, MAX_CMD_LENGTH, stdin);
+		int n = getInput();
+		printf("%d\n", n);
+		if (n <= 0)
+			continue;
 		int i=0;
-		int n = strlen(cmdStr);
 		parseCmds(n);
 		
 		for (i=0;i<cmdNum;++i) {
