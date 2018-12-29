@@ -223,9 +223,78 @@ int parseArgs() {
 				int tmp = getItem(pcmd->toFile, cmdStr, i);
 				if (tmp > 0)
 					i = tmp;
+			} else if (c == '|') {
+				pcmd->end = i;
+				pcmd->next = (struct cmd*)malloc(sizeof(struct cmd));
+				pcmd = pcmd->next;
+				init(pcmd);
+			} else if (c == ' ' || c == '\0') {
+				if (beginItem) {
+					beginItem = 0;
+					cmdStr[i] = '\0';
+				}
+			} else {
+				if (pcmd->begin == -1)
+					pcmd->begin = i;
+				if (!beginItem) {
+					beginItem = 1;
+					if((c=='$') && (cmdStr[i-1]=='\\') && (!hasVar))
+						hasVar = 1;
+					pcmd->args[pcmd->argc++] = cmdStr + i;
+				}
+			}
+			if (hasVar) {
+				hasVar = 0;
+				handleVar(pcmd, pcmd->argc-1);
 			}
 		}
+		pcmd->end = end;
 	}
+	return 0;
+}
+
+int execInner(struct cmd* pcmd) {
+	if (!pcmd->args[0]) 
+		return 0;
+	if (strcmp(pcmd->args[0], "cd") == 0) {
+		struct stat st;
+		if (pcmd->args[1]) {
+			stat(pcmd->args[1], &st);
+			if (S_ISDIR(st.st_mode))
+				chdir(pcmd->args[1]);
+			else {
+				printf("[ERROR]: cd %s: No such directory!\n", pcmd->args[1]);
+				return -1;
+			}
+		}
+		//TODO: 没有参数时cd到家目录
+		return 0;
+	}
+	if (strcmp(pcmd->args[0], "pwd") == 0) {
+		printf("%s\n", getcwd(pcmd->args[1], MAX_PATH_LENGTH));
+		return 0;
+	}
+	if (strcmp(pcmd->args[0], "unset") == 0) {
+		for (int i=0;i<pcmd->argc;++i) {
+			unsetenv(pcmd->args[i]);
+			return 0;
+		}
+	}
+	if (strcmp(pcmd->args[0], "export") == 0) {
+		for (int i=1;i<pcmd->argc;++i) {
+			char *val, *p;
+			for(p=pcmd->args[i];*p!='=';++p)
+				;
+			*p='\0';
+			val = p + 1;
+			setenv(pcmd->args[i], val, 1);
+		}
+		return 0;
+	}
+	if (strcmp(pcmd->args[0], "exit") == 0) {
+		exit(0);
+	}
+	return 1;
 }
 
 int main() {
