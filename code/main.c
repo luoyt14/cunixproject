@@ -142,6 +142,92 @@ int handleVar(struct cmd *pcmd, int n) {
 	return 0;
 }
 
+int parseArgs() {
+	char beginItem = 0;
+	char beginQuote = 0;
+	char beginDoubleQuote = 0;
+	char hasVar = 0;
+	char c;
+
+	int begin, end;
+	struct cmd* pcmd;
+
+	for (int p=0;p<cmdNum;++p) {
+		if (beginQuote || beginItem || beginDoubleQuote) {
+			return -1;
+		}
+		pcmd = &cmdinfo[p];
+		begin = pcmd->begin;
+		end = pcmd->end;
+		init(pcmd);
+
+		for (int i=begin;i<end;++i) {
+			c = cmdStr[i];
+			if((c=='\'') && (cmdStr[i-1])!='\\' && (!beginQuote)) {
+				if(beginDoubleQuote) {
+					beginItem = 0;
+					beginDoubleQuote = 0;
+					cmdStr[i] = 0;
+					if(hasVar) {
+						hasVar = 0;
+						handleVar(pcmd, pcmd->argc-1);
+					}
+				} else {
+					beginDoubleQuote = 1;
+					pcmd->args[pcmd->argc++] = cmdStr + i + 1;
+				}
+				continue;
+			} else if (beginDoubleQuote) {
+				if ((c=='$') && (cmdStr[i-1]!='\\') && (!hasVar))
+					hasVar = 1;
+				continue;
+			}
+
+			if((c=='\'') && (cmdStr[i-1]!='\\')) {
+				if(beginQuote) {
+					beginItem = 0;
+					beginQuote = 0;
+					cmdStr[i] = 0;
+				} else {
+					beginQuote = 1;
+					pcmd->args[pcmd->argc++] = cmdStr + i + 1;
+				}
+				continue;
+			} else if(beginQuote) {
+				continue;
+			}
+
+			if(c=='<' || c=='>' || c=='|') {
+				if(beginItem)
+					beginItem = 0;
+				cmdStr[i] = '\0';
+			}
+			if(c == '<') {
+				if (cmdStr[i+1] == '<') {
+					pcmd->lredir += 2;
+					cmdStr[i+1] = ' ';
+				} else {
+					pcmd->lredir += 1;
+				}
+
+				int tmp = getItem(pcmd->fromFile, cmdStr, i);
+				if (tmp > 0)
+					i = tmp;
+			} else if (c == '>') {
+				if (cmdStr[i+1] == '>') {
+					pcmd->rredir += 2;
+					cmdStr[i+1] = ' ';
+				} else {
+					pcmd->rredir += 1;
+				}
+				int tmp = getItem(pcmd->toFile, cmdStr, i);
+				if (tmp > 0)
+					i = tmp;
+			}
+		}
+	}
+}
+
 int main() {
 	while (1) {
 		cmdNum = 0;
