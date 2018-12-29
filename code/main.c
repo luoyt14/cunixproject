@@ -13,6 +13,7 @@ struct cmd {
 struct cmd cmdinfo[MAX_CMD_NUM];
 char cmdStr[MAX_CMD_LENGTH];
 int cmdNum, varNum;
+char envVar[MAX_VAR_NUM][MAX_PATH_LENGTH];
 
 void init(struct cmd *pcmd) {
 	pcmd->bgExec = 0;
@@ -52,7 +53,7 @@ int getInput() {
 	return pCmdStr;
 }
 
-void parseCmds(int n) {
+int parseCmds(int n) {
 	char beginCmd = 0;
 	struct cmd* head;
 
@@ -83,10 +84,65 @@ void parseCmds(int n) {
 			}
 		}
 	}
+	return 0;
+}
+
+int getItem(char *dst, char *src, int p) {
+	int ct = 0;
+	while (src[++p] == ' ');
+	if (src[p] == '\n')
+		return -1;
+	char c;
+	while ((c = dst[ct]) && (dst[ct] = src[p])) {
+		if (c == ' ' || c == '|' || c == '<' || c == '>' || c == '\n')
+			break;
+		++ct;
+		++p;
+	}
+	dst[ct] = '\0';
+	return p-1;
+}
+
+int handleVar(struct cmd *pcmd, int n) {
+	char *arg = pcmd->args[n];
+	int p_arg = 0, p_var = 0;
+	while (arg[p_arg]) {
+		if ((arg[p_arg] == '$') && (arg[p_arg-1]!='\\')) {
+			if(arg[p_arg+1] == '{')
+				p_arg += 2;
+			else
+				p_arg += 1;
+			char *tmp = &envVar[varNum][p_var];
+			int ct = 0;
+			while ((tmp[ct] = arg[p_arg])) {
+				if (tmp[ct] == '}') {
+					++ p_arg;
+					break;
+				}
+				if (tmp[ct] == ' ' || tmp[ct] == '\n' || tmp[ct] == '\0')
+					break;
+				++ct;
+				++p_arg;
+			}
+
+			tmp[ct] = '\0';
+			tmp = getenv(tmp);
+			int i = 0;
+			while(1){
+				if (!(envVar[varNum][p_var++]=tmp[i++]))
+					break;
+			}
+			p_var -= 1;
+		} else {
+			envVar[varNum][p_var++] = arg[p_arg++];
+		}
+	}
+	envVar[varNum][p_var] = '\0';
+	pcmd->args[n] = envVar[varNum++];
+	return 0;
 }
 
 int main() {
-	char *args[128];
 	while (1) {
 		cmdNum = 0;
 		varNum = 0;
@@ -111,22 +167,22 @@ int main() {
 			// 		chdir(pcmd->args[1]);
 			// 	continue;
 			// }
-			if (strcmp(pcmd->args[0], "pwd") == 0) {
-				char wd[4096];
-				puts(getcwd(wd, 4096));
-				continue;
-			}
-			if (strcmp(pcmd->args[0], "exit") == 0) {
-				return 0;
-			}
+			// if (strcmp(pcmd->args[0], "pwd") == 0) {
+			// 	char wd[4096];
+			// 	puts(getcwd(wd, 4096));
+			// 	continue;
+			// }
+			// if (strcmp(pcmd->args[0], "exit") == 0) {
+			// 	return 0;
+			// }
 
-			// 较高级命令
-			pid_t pid = fork();
-			if (pid == 0) {
-				execvp(pcmd->args[0], args);
-				return 255;
-			}
-			wait(NULL);
+			// // 较高级命令
+			// pid_t pid = fork();
+			// if (pid == 0) {
+			// 	execvp(pcmd->args[0], args);
+			// 	return 255;
+			// }
+			// wait(NULL);
 		}
 		
 	}
