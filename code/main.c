@@ -65,6 +65,10 @@ int parseCmds(int n) {
 					head->bgExec = 1;
 				}
 			}
+			case '\t':{
+				cmdStr[i] = ' ';
+				break;
+			}
 			case ';':{
 				beginCmd = 0;
 				cmdStr[i] = '\0';
@@ -93,7 +97,7 @@ int getItem(char *dst, char *src, int p) {
 	if (src[p] == '\n')
 		return -1;
 	char c;
-	while ((c = dst[ct]) && (dst[ct] = src[p])) {
+	while ((c = src[p]) && (dst[ct] = src[p])) {
 		if (c == ' ' || c == '|' || c == '<' || c == '>' || c == '\n')
 			break;
 		++ct;
@@ -357,7 +361,7 @@ int main() {
 	while (1) {
 		cmdNum = 0;
 		varNum = 0;
-		printf("$ ");
+		printf("^_^ ");
 		fflush(stdin);
 		int n = getInput();
 		if (n <= 0)
