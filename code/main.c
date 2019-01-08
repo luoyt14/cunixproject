@@ -7,7 +7,7 @@ struct cmd {
 	char lredir, rredir;
 	char toFile[MAX_PATH_LENGTH], fromFile[MAX_PATH_LENGTH];
 	char *args[MAX_ARG_NUM];
-	char bgExec; // 后台执行
+	int bgExec; // 后台执行
 };
 
 struct cmd cmdinfo[MAX_CMD_NUM];
