@@ -44,9 +44,36 @@
 \usepackage{algorithm}
 \usepackage{algorithmicx}
 \usepackage{algpseudocode}
+\usepackage{listings}
 %\floatname{algorithm}{算法}
 \renewcommand{\algorithmicrequire}{\textbf{输入:}}  
 \renewcommand{\algorithmicensure}{\textbf{输出:}} 
+
+\lstset{
+	columns=fixed,       
+%	numbers=left,                                        % 在左侧显示行号
+	numberstyle=\tiny\color{gray},                       % 设定行号格式
+	frame=none,                                          % 不显示背景边框
+	backgroundcolor=\color[RGB]{245,245,244},            % 设定背景颜色
+	keywordstyle=\color[RGB]{40,40,255},                 % 设定关键字颜色
+	numberstyle=\footnotesize\color{darkgray},           
+	commentstyle=\it\color[RGB]{0,96,96},                % 设置代码注释的格式
+	stringstyle=\rmfamily\slshape\color[RGB]{128,0,0},   % 设置字符串格式
+	showstringspaces=false,                              % 不显示字符串中的空格
+	language=c++,                                        % 设置语言
+}
+
+\AtBeginSection[]{
+	\begin{frame}{OUTLINE}
+	\tableofcontents[currentsection]
+	\end{frame}
+}
+
+\AtBeginSubsection[]{
+	\begin{frame}{OUTLINE}
+	\tableofcontents[currentsection,currentsubsection]
+    \end{frame}
+}
 \setlength{\parindent}{2em}
 \title{Yet Another Unix Shell }
 \author{\href{mailto:luoyt14thu@gmail.com}{罗雁天}}
@@ -59,10 +86,58 @@
 \titlepage
 \end{frame}
 
-\section*{目录}
 \begin{frame}{目录}
 \tableofcontents
 \end{frame}
 
+\section{简介}
 
+\begin{frame}{简介}
+本次大作业实现了一个命令行解释器yaush，能够实现如下功能：
+
+\begin{itemize}
+	\item 用户输入命令与参数，能够正常执行命令；
+	\item 输入、输出重定向到文件；
+	\item 管道；
+	\item 后台执行程序；
+	\item 作业控制(jobs,bg,fg)；
+	\item 历史命令(history)；
+	\item 文件名tab补全，各种快捷键(TODO)；
+	\item 环境变量、简单脚本；
+\end{itemize}
+\end{frame}
+
+\section{实现细节}
+\subsection{命令结构设计}
+\begin{frame}[fragile]
+\frametitle{命令结构设计}
+在实验中，设置了一个结构体来保存从输入解析到的命令结构：
+\begin{lstlisting}
+struct cmd {
+    struct cmd* next; //下一个命令
+    int begin, end; //命令的开始位置和结束位置
+    int argc; //命令和参数的总个数
+    char lredir, rredir; //输入、输出重定向的标识
+    char toFile[MAX_PATH_LENGTH]; //输出文件
+    char fromFile[MAX_PATH_LENGTH]; //输入文件
+    char *args[MAX_ARG_NUM]; //命令的参数
+    char bgExec; //是否后台执行
+};
+\end{lstlisting}
+\end{frame}
+
+\subsection{输入命令处理}
+\begin{frame}{输入命令处理}
+
+\end{frame}
+
+\section{实验结果}
+\subsection{执行步骤}
+\begin{frame}[fragile]
+\frametitle{执行步骤}
+进入code/文件夹下，输入"make"进行编译，然后输入"./main"执行进入yaush模式，如下图所示：
+
+
+
+\end{frame}
 \end{document}
