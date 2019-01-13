@@ -32,12 +32,15 @@ int getInput() {
 	int pCmdStr = 0;
 	int cur;
 	char newline = 1;
+	// char *cmdStrTemp;
 	while(newline) {
 		cur = MAX_CMD_LENGTH - pCmdStr;
 		if (cur <= 0) {
 			printf("[ERROR]: The cmd is too long to exec!\n");
 			return -1;
 		}
+		// cmdStr = readline((char*)NULL);
+		// strcat(cmdStr, cmdStrTemp);
 		fgets(cmdStr+pCmdStr, cur, stdin);
 		newline = 0;
 		while(1) {

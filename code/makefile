@@ -6,8 +6,8 @@ CFLAGS = -Wall -DDEBUG -g3
 
 all: $(OUT)
 
-%.o: %c
-	$(CC) $(CFLAGS) -c -o $@ $<
+$(OUT): $(CFILES)
+	$(CC) $(CFLAGS) main.c -lreadline -o main
 
 clean:
 	rm -f $(OBJS) $(OUT)
