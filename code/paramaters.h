@@ -20,5 +20,6 @@
 #define MAX_VAR_NUM 50
 #define MAX_CMD_NUM 10
 #define MAX_VAR_LENGTH 500
+#define HISTORYFILE ".history"
 
 #endif

@@ -102,8 +102,8 @@
 	\item 管道；
 	\item 后台执行程序；
 	\item 作业控制(jobs,bg,fg)；
-	\item 历史命令(history)(TODO)；
-	\item 文件名tab补全，各种快捷键(TODO)；
+	\item 历史命令(history)；
+	\item 文件名tab补全，各种快捷键；
 	\item 环境变量、简单脚本；
 \end{itemize}
 \end{frame}
@@ -122,14 +122,47 @@ struct cmd {
     char toFile[MAX_PATH_LENGTH]; //输出文件
     char fromFile[MAX_PATH_LENGTH]; //输入文件
     char *args[MAX_ARG_NUM]; //命令的参数
-    char bgExec; //是否后台执行
+    int bgExec; //是否后台执行
 };
 \end{lstlisting}
 \end{frame}
 
 \subsection{输入命令处理}
-\begin{frame}{输入命令处理}
+\begin{frame}{命令读取}
+在此，我们将命令行的输入以字符串的形式读取，读取后保存在一个字符串中为下一步的命令分割做准备。
+\begin{itemize}
+	\item 使用gets()函数读取字符串；
+	\item 支持多行字符串的读取：如果在输入中遇到'$\backslash$'之后紧接着'$\backslash n$'的情况时，将其看做多行字符串，不会立即执行命令，而是将下一行的输入也读取到字符串中；
+\end{itemize}
+\end{frame}
 
+\begin{frame}{命令分割}
+在命令读取完成后，由于可能包含多条命令，因此我们首先将其进行分割转换成单个命令并保存到数组之中为下一步命令解析做准备。
+\begin{itemize}
+	\item 设置一个bool变量beginCmd，初始为0；如果beginCmd是0，那么将结构体中的begin变量置为此时的下标并把beginCmd置1；
+	\item 遇到'$\&$'字符并且之后的字符为'$\backslash n$'或'$;$'，将结构体中的bgExec置为1；
+	\item 遇到'$\backslash n$'或'$;$'时将结构体中的end变量置为此时的下标；
+\end{itemize}
+\end{frame}
+
+\begin{frame}{命令解析}
+将上一步分割之后的单个命令在此进行解析，分割成命令+参数的形式。以链表的形式保存。
+\begin{itemize}
+	\item 首先使用上一步骤确定的begin和end参数将字符串中命令的部分取出；
+	\item 然后逐字符的考察来构造命令结构体；
+	\item 如果遇到$\$$，那么他后面跟着的是一个变量；
+	\item 如果遇到$>,<$，那么他后面跟的是重定向的文件标识符；
+	\item 如果遇到$|$，那么后面跟着一个命令，初始化一个新的命令结构体，并且将此结构体链接到上一个结构体的后面形成链表。
+\end{itemize}
+\end{frame}
+
+\begin{frame}{命令执行}
+将输入的字符串成功分割成命令之后，之后执行命令的操作就比较简单了。
+\begin{itemize}
+	\item 对于$cd,pwd,unset,export,exit$这些命令，直接进行了代码实现；
+	\item 对于复杂的命令如$cal,boxes$等，fork了一个子进程，直接使用execvp函数执行命令，父进程等待子进程结束即可；
+	\item 对于后台执行的命令，直接输出"exec in bg"，父进程不用等待子进程结束即可。
+\end{itemize}
 \end{frame}
 
 \section{实验结果}
@@ -146,26 +179,72 @@ struct cmd {
 
 \subsection{命令执行}
 \begin{frame}{正确执行简单命令}
-在此我们演示几个较为简单地命令(ls, sl, cd等)，如图所示：
+在此我们演示几个较为简单地命令(ls, cd, cowsay等)，如图\ref{base}所示：
+\begin{figure}
+	\centering
+	\begin{minipage}[t]{0.45\textwidth}
+		\centering
+		\includegraphics[width=4cm]{images/base1}
+	\end{minipage}
+	\begin{minipage}[t]{0.45\textwidth}
+		\centering
+		\includegraphics[width=4cm]{images/base2}
+	\end{minipage}
+	\caption{\label{base}简单命令执行示意图}
+\end{figure}
+
 \end{frame}
 
 \begin{frame}{输入输出重定向到文件}
-在此我们演示将命令输入重定向和输出重定向的功能，如图所示：
+在此我们演示将命令输入重定向和输出重定向的功能，如图\ref{redirect}所示：
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.65\textwidth]{images/redirect}
+	\caption{\label{redirect}输入输出重定向运行结果}
+\end{figure}
 \end{frame}
 
 \begin{frame}{管道操作}
-在此我们通过管道操作符'|'演示管道操作，如图所示：
+在此我们通过管道操作符'|'演示管道操作，如图\ref{pipe}所示：
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.65\textwidth]{images/pipe}
+	\caption{\label{pipe}管道操作结果示意图}
+\end{figure}
 \end{frame}
 
 \begin{frame}{后台执行程序}
 在此我们对比演示'sleep 10'和'sleep 10 \&'两个命令的区别，如图所示：
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.95\textwidth]{images/bg}
+	\caption{\label{bg}后台执行命令结果示意图}
+\end{figure}
 \end{frame}
 
+\begin{frame}{历史记录操作}
+在此我们演示了'history'命令的执行结果，如图\ref{history}所示：
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.95\textwidth]{images/history}
+	\caption{\label{history}history结果示意图}
+\end{figure}
+\end{frame}
 \begin{frame}{环境变量设置}
-在此我们执行export设置环境变量并且用echo输出环境变量作为演示，如图所示：
+在此我们执行export设置环境变量并且用echo输出环境变量作为演示，如\ref{envvar}所示：
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.95\textwidth]{images/envvar}
+	\caption{\label{envvar}环境变量设置与输出示意图}
+\end{figure}
 \end{frame}
 \begin{frame}{简单脚本执行}
-在此我们首先使用vim建立一个脚本文件，然后在yaush中执行此脚本文件，如图所示：
+在此我们首先使用vim建立一个脚本文件，然后在yaush中执行此脚本文件，如图\ref{script}所示：
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.75\textwidth]{images/script}
+	\caption{\label{script}简单脚本执行结果示意图}
+\end{figure}
 \end{frame}
 
 \section{总结}
@@ -175,7 +254,7 @@ struct cmd {
 \begin{itemize}
 	\item 能够正确使用上下左右箭头进行调整；
 	\item 能够支持中文；
-	\item 能够使用history命令以及实现自动补全、快捷键等。
+	\item 能够实现自动补全、快捷键等。
 \end{itemize}
 \end{frame}
 

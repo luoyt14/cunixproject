@@ -14,6 +14,7 @@ struct cmd cmdinfo[MAX_CMD_NUM];
 char cmdStr[MAX_CMD_LENGTH];
 int cmdNum, varNum;
 char envVar[MAX_VAR_NUM][MAX_PATH_LENGTH];
+int numhistory = 0;
 
 void init(struct cmd *pcmd) {
 	pcmd->bgExec = 0;
@@ -50,6 +51,13 @@ int getInput() {
 			++pCmdStr;
 		}
 	}
+
+	FILE* fp;
+	fp = fopen(HISTORYFILE, "a");
+    // printf("%d:%s\n", numhistory++, cmdStr);
+    // fprintf(fp, "MDZZ");
+    fprintf(fp, "%d:%s", numhistory++, cmdStr);
+    fclose(fp);
 	return pCmdStr;
 }
 
@@ -154,6 +162,7 @@ int parseArgs() {
 	char c;
 
 	int begin, end;
+	// int bgExec;
 	struct cmd* pcmd;
 
 	for (int p=0;p<cmdNum;++p) {
@@ -163,7 +172,9 @@ int parseArgs() {
 		pcmd = &cmdinfo[p];
 		begin = pcmd->begin;
 		end = pcmd->end;
+		// bgExec = pcmd->bgExec;
 		init(pcmd);
+		// pcmd->bgExec = bgExec;
 
 		for (int i=begin;i<end;++i) {
 			c = cmdStr[i];
@@ -278,6 +289,18 @@ int execInner(struct cmd* pcmd) {
 		printf("%s\n", getcwd(pcmd->args[1], MAX_PATH_LENGTH));
 		return 0;
 	}
+	if (strcmp(pcmd->args[0], "history") == 0) {
+		FILE* fp;
+		if( (fp=fopen(HISTORYFILE,"r")) == NULL ){
+			perror(HISTORYFILE);
+			exit(1);
+		}
+		char buff[255];
+		while(fgets(buff, 255, (FILE*)fp)) {
+			printf("%s", buff);
+		}
+		return 0;
+	}
 	if (strcmp(pcmd->args[0], "unset") == 0) {
 		for (int i=0;i<pcmd->argc;++i) {
 			unsetenv(pcmd->args[i]);
@@ -386,6 +409,8 @@ int main() {
 
 				if (!pcmd->bgExec)
 					wait(NULL);
+				else
+					printf("exec in bg!\n");
 
 				pcmd = pcmd->next;
 
